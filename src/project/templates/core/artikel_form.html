@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>{{ title|default:"Artikel anlegen" }}</h1>
+  <form method="post" enctype="multipart/form-data" class="card">
+    {% csrf_token %}
+    <p>
+      <label class="label">Titel</label>
+      <input type="text" name="titel" maxlength="150" required
+             value="{{ form.titel.value|default_if_none:'' }}">
+    </p>
+    <p>
+      <label class="label">Beschreibung</label>
+      <textarea name="beschreibung" rows="4" required>{{ form.beschreibung.value|default_if_none:'' }}</textarea>
+    </p>
+    <p>
+      <label class="label">Kategorie</label>
+      <select name="kategorie">
+        {% for k in form.fields.kategorie.queryset %}
+          <option value="{{ k.pk }}" {% if form.kategorie.selected_value == k.pk %}selected{% endif %}>{{ k.name }}</option>
+        {% endfor %}
+      </select>
+    </p>
+    <p>
+      <label class="label">Zustand</label>
+      <select name="zustand">
+        {% for value, label in form.fields.zustand.choices %}
+          <option value="{{ value }}" {% if form.zustand.value == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </p>
+    <p>
+      <label class="label">Preis (€)</label>
+      <input type="number" step="0.01" min="0" name="preis" required
+             value="{{ form.preis.value|default_if_none:'0.00' }}">
+    </p>
+    <p>
+      <label class="label">Zahlungsverfügbar</label>
+      <input type="number" step="1" min="0" name="anzahl_verfügbar"
+             value="{{ form.anzahl_verfügbar.value|default_if_none:'1' }}">
+    </p>
+    <p>
+      <label class="label">P&amp;P-Option</label>
+      <select name="pp_option">
+        {% for o in form.fields.pp_option.queryset %}
+          <option value="{{ o.pk }}" {% if form.pp_option.value == o.pk|stringformat:"s" %}selected{% endif %}>
+            {{ o.bezeichnung }} ({{ o.kosten|floatformat:2 }} €)
+          </option>
+        {% endfor %}
+      </select>
+    </p>
+    {% if form.errors %}
+      <div class="error">Bitte prüfen: {{ form.errors|safe }}</div>
+    {% endif %}
+    <p style="margin-top:1rem">
+      <button type="submit" class="btn">{{ submit_label|default:"Speichern" }}</button>
+      <a href="{% url 'core:artikel-liste' %}" class="muted">Abbrechen</a>
+    </p>
+  </form>
+{% endblock %}

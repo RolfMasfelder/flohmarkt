@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Artikel — Flohmarkt{% endblock %}
+{% block content %}
+  <h1>Artikel <span class="muted">({{ artikel_list|length }} sichtbar)</span></h1>
+  {% if artikel_list %}
+    {% for a in artikel_list %}
+      <div class="card" hx-swap="none">
+        <h2 style="margin:0 0 .25rem">
+          <a href="{% url 'core:artikel-detail' a.pk %}">{{ a.titel }}</a>
+        </h2>
+        <div>{{ a.preis|floatformat:2 }} €
+          {% if a.pp_option %}+ {{ a.pp_option.kosten|floatformat:2 }} € P&amp;P{% else %}(keine P&amp;P-Option){% endif %}
+        </div>
+        <div class="muted">
+          {{ a.get_zustand_display }} ·
+          {{ a.rest_verfügbar }}/{{ a.anzahl_verfügbar }} verfügbar
+          · {% if a.verkauft %}<strong>verkauft</strong>{% else %}aktiv{% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p class="card">Noch keine aktiven Artikel. <a href="{% url 'core:artikel-anlegen' %}">Ersten anlegen →</a></p>
+  {% endif %}
+{% endblock %}
