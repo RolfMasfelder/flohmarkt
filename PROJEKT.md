@@ -1,7 +1,7 @@
 # PROJEKT.md — flohmarkt
 
 > Verwaltung von Handelsartikeln, die auf mehreren Plattformen (Kleinanzeigen u. a.) angeboten werden.
-> Status: **v0 implementiert, Doku finalisiert** (Stand: 2026-11-21)
+> Status: **v1 implementiert & verifiziert** — Docker-Stack + PG 18 live, 18/18 Tests (lokal + Postgres), auf `dev` gepusht (Stand: 2026-11-22)
 > Doku-Quellen: `PROJEKT.md` (dies), `docs/arc42.md`, `docs/DECISIONS.md` (ADRs)
 
 ## 1. Ziel
