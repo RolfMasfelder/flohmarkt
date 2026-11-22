@@ -1,23 +1,25 @@
 """Test-Profil: eigene DB, SQLite für Geschwindigkeit (Docker/CI nutzt Postgres im CI-Plan)."""
 
-from .base import *  # noqa: F401,F403
+import os
+
+from .base import *  # noqa: F403
 
 # Test-Instanz
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
-# Test-DB: SQLite (lokal); im CI via env DATABASE_URL Postgres erzwingen.
-if "DATABASE_URL" in env:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": env("DB_NAME", default="flohmarkt_test"),
-            "USER": env("DB_USER"),
-            "PASSWORD": env("DB_PASSWORD"),
-            "HOST": env("DB_HOST", default="localhost"),
-            "PORT": env("DB_PORT", default="5432"),
+# Test-DB: Default SQLite (lokal/CI-light); mit POSTGRES_HOST auf einen
+# erreichbaren Server gesetzt -> PostgreSQL (für Integrationstests, z.B. Compose).
+if os.environ.get("POSTGRES_HOST"):
+    DATABASES["default"].update(
+        {
+            "NAME": env.str("POSTGRES_DB", "flohmarkt_test"),
+            "USER": env.str("POSTGRES_USER", "flohmarkt"),
+            "PASSWORD": env.str("POSTGRES_PASSWORD", ""),
+            "HOST": env.str("POSTGRES_HOST"),
+            "PORT": env.str("POSTGRES_PORT", "5432"),
             "CONN_MAX_AGE": 0,
         }
-    }
+    )
 else:
     DATABASES = {
         "default": {

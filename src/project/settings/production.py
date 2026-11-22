@@ -2,22 +2,21 @@
 
 import os
 
-from .base import *  # noqa: F403,F405
+from .base import *  # noqa: F403
 from .base import _DEV_SENTINEL
 
 DEBUG = False
 if not str(SECRET_KEY) or str(SECRET_KEY) == _DEV_SENTINEL:
     raise SystemExit("FLOHMARKT_PROFILE=production: DJANGO_SEC" + "RET_KEY fehlt.")
-if not ALLOWED_HOSTS:  # noqa: F405
+if not ALLOWED_HOSTS:
     raise SystemExit("FLOHMARKT_PROFILE=production: DJANGO_ALLOWED_HOSTS fehlt.")
-if [h.lower() for h in ALLOWED_HOSTS] in (["localhost", "127.0.0.1"], ["127.0.0.1"]):  # noqa: F405
+if [h.lower() for h in ALLOWED_HOSTS] in (["localhost", "127.0.0.1"], ["127.0.0.1"]):
     raise SystemExit("FLOHMARKT_PROFILE=production: ALLOWED_HOSTS muss wirksam sein.")
-for _k in ("POSTGRES_HOST", "POSTGRES_DB", "POSTGRES_USER",
-           "POSTGRES_" + "PASS" + "WORD"):
+for _k in ("POSTGRES_HOST", "POSTGRES_DB", "POSTGRES_USER", "POSTGRES_" + "PASS" + "WORD"):
     if not os.environ.get(_k):
         raise SystemExit(f"FLOHMARKT_PROFILE=production: {_k} fehlt.")
 
-DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_" + "MAX_AGE", default=60)  # noqa: F405
+DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_" + "MAX_AGE", default=60)
 
 # --- HTTPS hinter Reverse-Proxy (Caddy/Traefik) ------------------------------
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

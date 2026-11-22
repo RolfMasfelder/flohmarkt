@@ -8,7 +8,7 @@ from decimal import Decimal
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from project.core.models import PPOption, Plattform
+from project.core.models import Plattform, PPOption
 
 
 class Command(BaseCommand):
@@ -18,7 +18,7 @@ class Command(BaseCommand):
     def _set_default(obj: PPOption, was_created: bool) -> None:
         """Genau eine Default-Option: wenn 'Selbstabholung' neu ist, Default setzen."""
         if was_created:
-            PPOption.objects.filter(is_default=True, pk__ne=obj.pk).update(is_default=False)
+            PPOption.objects.exclude(pk=obj.pk).filter(is_default=True).update(is_default=False)
             obj.is_default = True
             obj.save(update_fields=["is_default"])
 
@@ -34,7 +34,7 @@ class Command(BaseCommand):
 
             PPOption.objects.get_or_create(
                 bezeichnung="Paket",
-                defaults={"kosten": Decimal("3.99"), "beschreibung": "Standardpaket, 0,5–20 kg"},
+                defaults={"kosten": Decimal("3.99"), "beschreibung": "Standardpaket, 0,5-20 kg"},
             )
             PPOption.objects.get_or_create(
                 bezeichnung="Maxi-Paket",
@@ -42,7 +42,7 @@ class Command(BaseCommand):
             )
             self.stdout.write(self.style.SUCCESS("✓ P&P-Optionen geprüft/angelegt"))
 
-            plat, created = Plattform.objects.get_or_create(
+            _plat, created = Plattform.objects.get_or_create(
                 name="Kleinanzeigen",
                 defaults={
                     "adapter_slug": "kleinanzeigen",

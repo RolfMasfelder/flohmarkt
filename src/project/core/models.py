@@ -9,14 +9,13 @@ Kernprinzipien:
 - **Bilder** in zwei Quellen:
   - ``Bild`` mit ``source=upload`` (echtes Upload), oder
   - ``Bild`` mit ``source=symbol`` + Bezug auf ``BildSymbol``.
-- **Anzahl verfügbar**: 1 Teller 5× → ``anzahl_verfügbar = 5``.
+- **Anzahl verfügbar**: 1 Teller 5x → ``anzahl_verfügbar = 5``.
 """
 
 from decimal import Decimal
 from pathlib import Path
 
 from django.conf import settings as django_settings
-from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils import timezone
 
@@ -61,7 +60,9 @@ class Plattform(models.Model):
     """
 
     name = models.CharField(max_length=50, unique=True)
-    adapter_slug = models.CharField(max_length=50, help_text="Python-Modul/Adapter, der diese Plattform bedient.")
+    adapter_slug = models.CharField(
+        max_length=50, help_text="Python-Modul/Adapter, der diese Plattform bedient."
+    )
     konfiguration = models.JSONField(default=dict, blank=True)
     is_aktiv = models.BooleanField(default=True)
 
@@ -170,7 +171,7 @@ class Artikel(models.Model):
 
     anzahl_verfügbar = models.PositiveIntegerField(
         default=1,
-        help_text="Wie viele identische Exemplare sind verfügbar (z. B. ein Motiv, 5× Teller).",
+        help_text="Wie viele identische Exemplare sind verfügbar (z. B. ein Motiv, 5x Teller).",
     )
     anzahl_verkauft = models.PositiveIntegerField(default=0, help_text="Count der verkauften Exemplare.")
 
@@ -189,6 +190,7 @@ class Artikel(models.Model):
 
     def get_absolute_url(self) -> str:
         from django.urls import reverse
+
         return reverse("core:artikel-detail", args=[self.pk])
 
     # -- Helpers -------------------------------------------------------------
@@ -292,7 +294,7 @@ class Bild(models.Model):
 
 
 # ---------------------------------------------------------------------------
-# Plattformstatus — NxM Artikel × Plattform
+# Plattformstatus — NxM Artikel x Plattform
 # ---------------------------------------------------------------------------
 class PlatformStatus(models.Model):
     """Status eines Artikels auf einer bestimmten Plattform.

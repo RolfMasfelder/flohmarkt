@@ -10,9 +10,9 @@ from project.core.models import (
     BildSource,
     BildSymbol,
     Kategorie,
-    PPOption,
-    Plattform,
     PlatformStatus,
+    Plattform,
+    PPOption,
 )
 
 
@@ -53,7 +53,13 @@ class BildSerializer(serializers.ModelSerializer):
             "is_primary",
         ]
         read_only_fields = [
-            "id", "source", "pfad", "symbol", "alt_text", "position", "is_primary",
+            "id",
+            "source",
+            "pfad",
+            "symbol",
+            "alt_text",
+            "position",
+            "is_primary",
         ]
 
 
@@ -108,8 +114,11 @@ class ArtikelSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = [
-            "rest_verfügbar", "anzahl_verkauft", "verkauft",
-            "created_at", "updated_at",
+            "rest_verfügbar",
+            "anzahl_verkauft",
+            "verkauft",
+            "created_at",
+            "updated_at",
         ]
 
     def get_pp_bezeichnung(self, obj) -> str | None:
@@ -168,9 +177,7 @@ class BildInputSerializer(serializers.Serializer):
 
     source = serializers.ChoiceField(choices=BildSource.choices)
     pfad = serializers.CharField(required=False, allow_blank=True)
-    symbol = serializers.PrimaryKeyRelatedField(
-        queryset=BildSymbol.objects.all(), required=False
-    )
+    symbol = serializers.PrimaryKeyRelatedField(queryset=BildSymbol.objects.all(), required=False)
     alt_text = serializers.CharField(required=False, allow_blank=True, max_length=255)
     position = serializers.IntegerField(min_value=0, default=0)
     is_primary = serializers.BooleanField(default=False)

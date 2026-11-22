@@ -1,0 +1,65 @@
+# flohmarkt – Dev-Stack: App (Gunicorn/WhiteNoise) + PostgreSQL 18
+# Start:  make up        (bzw. docker compose up --build -d)
+# Tests: make pytest-docker
+# Hinweis: läuft mit FLOHMARKT_PROFILE=development (lokale Instanz ohne TLS-Front).
+name: flohmarkt
+
+services:
+  app:
+    build: .
+    image: flohmarkt:dev
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      FLOHMARKT_PROFILE: development
+      DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY:-dev-stack-only-key}"
+      DJANGO_ALLOWED_HOSTS: "${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}"
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: "${POSTGRES_DB:-flohmarkt}"
+      POSTGRES_USER: "${POSTGRES_USER:-flohmarkt}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-flohmarkt}"
+      FLOHMARKT_MEDIA_ROOT: /data/media
+      FLOHMARKT_SYMBOL_DIR: /data/symbols
+    volumes:
+      - media:/data/media
+      - symbols:/data/symbols
+    ports:
+      - "8000:8000"
+    # First-Boot: Migrationen + Basisdaten vor dem Worker-Start (idempotent)
+    command: sh -c "python manage.py migrate --noinput && python manage.py seed_basics && exec gunicorn project.wsgi:application -b 0.0.0.0:8000 -w 2"
+
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: "${POSTGRES_DB:-flohmarkt}"
+      POSTGRES_USER: "${POSTGRES_USER:-flohmarkt}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-flohmarkt}"
+    volumes:
+      # PG 18+: einzelner Mount an /var/lib/postgresql (Version-Subdirs, pg_upgrade-kompatibel)
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Test-DB: nur erreichbar über `docker compose --profile tests`
+  db-tests:
+    image: postgres:18
+    profiles: ["tests"]
+    environment:
+      POSTGRES_DB: ${DJANGO_POSTGRES_DB_TEST:-flohmarkt_test}
+      POSTGRES_USER: ${DJANGO_POSTGRES_USER_TEST:-flohmarkt}
+      POSTGRES_PASSWORD: ${DJANGO_POSTGRES_PASSWORD_TEST:-test}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DJANGO_POSTGRES_USER_TEST:-flohmarkt} -d ${DJANGO_POSTGRES_DB_TEST:-flohmarkt_test}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
+  media:
+  symbols:

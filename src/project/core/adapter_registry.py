@@ -1,7 +1,7 @@
 """Adapter-Registry: dynamisches Laden von Plattform-Adaptern via ``adapter_slug``."""
 
-from importlib import import_module
-from typing import Callable, Protocol
+from collections.abc import Callable
+from typing import Protocol
 
 
 class BaseAdapter(Protocol):
@@ -17,17 +17,13 @@ class BaseAdapter(Protocol):
     ``media``: Liste absoluter Pfade (Bytes/Datei), die hochgeladen werden.
     """
 
-    def create(self, **kwargs) -> str:
-        ...
+    def create(self, **kwargs) -> str: ...
 
-    def update(self, **kwargs) -> None:
-        ...
+    def update(self, **kwargs) -> None: ...
 
-    def delete(self, ext_id: str) -> None:
-        ...
+    def delete(self, ext_id: str) -> None: ...
 
-    def sync_status(self, ext_id: str) -> dict:
-        ...
+    def sync_status(self, ext_id: str) -> dict: ...
 
 
 # Registry-Singleton (pro-Process; Stateless, Adapter selbst konfigurierbar)

@@ -6,7 +6,7 @@ import pytest
 from django.contrib.auth.models import User
 from rest_framework.test import APIClient
 
-from project.core.models import Artikel, PPOption, Plattform
+from project.core.models import Artikel, Plattform, PPOption
 
 
 @pytest.fixture

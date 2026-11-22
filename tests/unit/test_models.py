@@ -3,6 +3,7 @@
 from decimal import Decimal
 
 import pytest
+from django.db import IntegrityError
 
 from project.core.models import Bild, BildSource, BildSymbol, PlatformStatus
 
@@ -29,14 +30,12 @@ def test_rest_verfügbar_nach_verkauf(artikel):
 def test_symbol_bild_mit_bezug(artikel):
     """Ein 'symbol'-Bild referenziert zwingend ein Symbol (DB-Constraint)."""
     sym = BildSymbol.objects.create(bezeichnung="Teller-Platzhalter", pfad="teller.svg")
-    b = Bild.objects.create(
-        artikel=artikel, source=BildSource.SYMBOL, symbol=sym, position=0
-    )
+    b = Bild.objects.create(artikel=artikel, source=BildSource.SYMBOL, symbol=sym, position=0)
     assert b.symbol_id == sym.id
 
 
 def test_symbol_bild_ohne_bezug_fehlt(artikel):
-    with pytest.raises(Exception):
+    with pytest.raises(IntegrityError):
         Bild.objects.create(
             artikel=artikel,
             source=BildSource.SYMBOL,
@@ -55,7 +54,7 @@ def test_upload_bild_ohne_symbol_ok(artikel):
 
 def test_platformstatus_einzig_pro_paar(artikel, plat_kleinanzeigen):
     PlatformStatus.objects.create(artikel=artikel, platform=plat_kleinanzeigen)
-    with pytest.raises(Exception):
+    with pytest.raises(IntegrityError):
         PlatformStatus.objects.create(artikel=artikel, platform=plat_kleinanzeigen)
 
 

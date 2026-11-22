@@ -60,11 +60,17 @@ def test_api_verkauft_filter(api_client):
     from project.core.models import Artikel
 
     v = Artikel.objects.create(
-        titel="Kauf-Abteil", beschreibung="x", preis=Decimal("1.00"),
-        anzahl_verfügbar=1, anzahl_verkauft=1, verkauft=True,
+        titel="Kauf-Abteil",
+        beschreibung="x",
+        preis=Decimal("1.00"),
+        anzahl_verfügbar=1,
+        anzahl_verkauft=1,
+        verkauft=True,
     )
     off = Artikel.objects.create(
-        titel="Noch da", beschreibung="y", preis=Decimal("1.00"),
+        titel="Noch da",
+        beschreibung="y",
+        preis=Decimal("1.00"),
     )
 
     alle = api_client.get("/api/artikel/").json()["results"]

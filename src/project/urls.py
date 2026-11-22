@@ -8,8 +8,8 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, Spec
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", include("project.core.urls")),              # HTMX-UI
-    path("api/", include("project.api.urls")),           # DRF REST-API
+    path("", include("project.core.urls")),  # HTMX-UI
+    path("api/", include("project.api.urls")),  # DRF REST-API
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/swagger/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
     path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),

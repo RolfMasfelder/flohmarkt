@@ -1,13 +1,15 @@
+from django.http import JsonResponse
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
 
 from project.api.serializers import (
-    ArtikelSerializer,
     ArtikelInputSerializer,
-    PPOptionSerializer,
+    ArtikelSerializer,
     PlattformSerializer,
+    PPOptionSerializer,
 )
-from project.core.models import Artikel, PPOption, Plattform
+from project.core.models import Artikel, Plattform, PPOption
 
 
 class ArtikelViewSet(viewsets.ModelViewSet):
@@ -42,3 +44,13 @@ class PlattformViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Plattform.objects.filter(is_aktiv=True)
     serializer_class = PlattformSerializer
     permission_classes = [IsAuthenticated]
+
+
+class HealthzView(APIView):
+    """Liveness-Check für Container-Probes (Docker HEALTHCHECK, k8s) — ohne DB-Zugriff."""
+
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request, *args, **kwargs):
+        return JsonResponse({"status": "ok"})

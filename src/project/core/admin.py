@@ -1,13 +1,13 @@
 from django.contrib import admin
 
 from project.core.models import (
+    Artikel,
     Bild,
     BildSymbol,
     Kategorie,
-    PPOption,
-    Plattform,
     PlatformStatus,
-    Artikel,
+    Plattform,
+    PPOption,
 )
 
 

@@ -38,4 +38,8 @@ class ArtikelBearbeitenView(UpdateView):
     template_name = "core/artikel_bearbeiten.html"
 
     def get_success_url(self):
-        return self.get_object().get_absolute_url() if hasattr(self.get_object(), "get_absolute_url") else self.get_object().pk
+        return (
+            self.get_object().get_absolute_url()
+            if hasattr(self.get_object(), "get_absolute_url")
+            else self.get_object().pk
+        )

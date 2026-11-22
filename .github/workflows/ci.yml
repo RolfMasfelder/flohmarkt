@@ -1,0 +1,119 @@
+# flohmarkt CI: Lint + Tests (SQLite + Postgres) + SBOM (syft/cyclonedx)
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DJANGO_SETTINGS_MODULE: project.settings
+  FLOHMARKT_PROFILE: testing
+  # Dev-feste Testwerte – nur für Actions-Jobs, niemals echte Secrets
+  DJANGO_SECRET_KEY: ci-test-key-not-for-production-use-0000
+  DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+  POSTGRES_HOST: localhost
+  POSTGRES_DB: flohmarkt_ci
+  POSTGRES_USER: flohmarkt_ci
+  POSTGRES_PASSWORD: flohmarkt_ci
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+      - run: pip install ".[dev]"  # dev-Extras enthalten ruff
+      - run: ruff check .
+      - run: ruff format --check .
+
+  test-sqlite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - name: Django check
+        run: python manage.py check
+      - run: python -m pytest --verbose
+
+  test-postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: flohmarkt_ci
+          POSTGRES_USER: flohmarkt_ci
+          POSTGRES_PASSWORD: flohmarkt_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      POSTGRES_HOST: localhost
+      DATABASE_URL: postgresql://flohmarkt_ci:flohmarkt_ci@localhost:5432/flohmarkt_ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - run: python manage.py check --deploy
+      - run: python -m pytest --verbose
+
+  sbom:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install syft
+        uses: anchore/setup-syft@v0.13.0
+      - name: Generate SBOM (cyclonedx-json)
+        run: |
+          syft dir:. \
+            -q -o format CycloneDXJSON \
+            > cyclonedx.sbom.json
+          du -h cyclonedx.sbom.json
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: flohmarkt-sbom
+          path: cyclonedx.sbom.json
+
+  docker:
+    needs: [test-postgres]
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: ghcr.io/${{ github.repository }}:ci-${{ github.run_number }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
