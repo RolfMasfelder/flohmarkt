@@ -87,18 +87,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install syft
+        # Asset-Namen enthalten die Version (syft_X.Y.Z_<os>_<arch>.tar.gz),
+        # also erst Release aufrufen und die Asset-URL daraus nehmen.
         run: |
-          arch="$SYFT_ARCH"   # unten gesetzt: amd64 | arm64
-          [ -z "$arch" ] && arch="$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
-          curl -sSfL -o /tmp/syft.tar.gz \
-            "https://github.com/anchore/syft/releases/latest/download/syft_linux_${arch}.tar.gz"
+          arch="$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
+          url=$(curl -sSfL \
+              "https://api.github.com/repos/anchore/syft/releases/latest" \
+              | python3 -c "import json,sys;print(next(a['browser_download_url'] for a in json.load(sys.stdin)['assets'] if a['name'].endswith(f'linux_${arch}.tar.gz') and 'sbom' not in a['name']))")
+          curl -sSfL -o /tmp/syft.tar.gz "$url"
           tar -xzf /tmp/syft.tar.gz -C /usr/local/bin syft
           syft version
       - name: Generate SBOM (cyclonedx-json)
         run: |
-          syft dir:. \
-            -q -o format CycloneDXJSON \
-            > cyclonedx.sbom.json
+          syft scan . -q -o cyclonedx-json > cyclonedx.sbom.json
           du -h cyclonedx.sbom.json
       - name: Upload SBOM
         uses: actions/upload-artifact@v4
