@@ -37,6 +37,10 @@ jobs:
 
   test-sqlite:
     runs-on: ubuntu-latest
+    env:
+      # test-sqlite läuft bewusst OHNE Postgres (POSTGRES_HOST ungesetzt),
+      # damit das testing-Profil auf SQLite fällt (siehe settings/testing.py).
+      POSTGRES_HOST:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -83,7 +87,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install syft
-        uses: anchore/setup-syft@v0.13.0
+        run: |
+          arch="$SYFT_ARCH"   # unten gesetzt: amd64 | arm64
+          [ -z "$arch" ] && arch="$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
+          curl -sSfL -o /tmp/syft.tar.gz \
+            "https://github.com/anchore/syft/releases/latest/download/syft_linux_${arch}.tar.gz"
+          tar -xzf /tmp/syft.tar.gz -C /usr/local/bin syft
+          syft version
       - name: Generate SBOM (cyclonedx-json)
         run: |
           syft dir:. \
@@ -115,6 +125,7 @@ jobs:
         with:
           context: .
           push: false
-          tags: ghcr.io/${{ github.repository }}:ci-${{ github.run_number }}
+          # GHCR-Repos müssen lowercase sein (Owner-Name ist gemischt).
+          tags: ghcr.io/rolfmasfelder/flohmarkt:ci-${{ github.run_number }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
