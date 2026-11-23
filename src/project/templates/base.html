@@ -1,0 +1,46 @@
+<!doctype html>
+<!-- Flohmarkt Basisvorlage. V1 bewusst leicht: kein JS-Build, HTMX über CDN
+     (später lokal + pin). -->
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Flohmarkt{% endblock %}</title>
+  {{ media }}
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: system-ui, sans-serif; margin: 0; line-height: 1.5; }
+    main { max-width: 46rem; margin: 2rem auto; padding: 0 1rem; }
+    header { border-bottom: 1px solid #8884; padding: .5rem 1rem; }
+    nav a { margin-right: 1rem; }
+    .card { border: 1px solid #8884; border-radius: .5rem; padding: 1rem; margin: .75rem 0; }
+    .label { display: block; font-size: .85rem; opacity: .8; }
+    input[type=text], input[type=number], input[type=file], textarea, select {
+      width: 100%; box-sizing: border-box; padding: .5rem; border: 1px solid #8886; border-radius: .3rem; background: transparent; color: inherit;
+    }
+    .btn { display: inline-block; padding: .5rem 1rem; border: 1px solid #4f4; background: #4f43; color: #fff; border-radius: .3rem; cursor: pointer; }
+    .error { color: #f66; }
+    .muted { opacity: .7; font-size: .9rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <strong>🥕 Flohmarkt</strong>
+    <nav>
+      <a href="{% url 'core:artikel-liste' %}">Artikel</a>
+      <a href="{% url 'core:artikel-anlegen' %}">Neuer Artikel</a>
+      <a href="/admin/">Admin</a>
+    </nav>
+  </header>
+  <main>
+    {% if messages %}
+      <div class="messages">
+        {% for message in messages %}
+          <div class="card">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

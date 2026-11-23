@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}{{ artikel.titel }} — Flohmarkt{% endblock %}
+{% block content %}
+  <p><a href="{% url 'core:artikel-liste' %}">← Liste</a></p>
+  <h1>{{ artikel.titel }}</h1>
+
+  <div class="card">
+    <p>{{ artikel.beschreibung|linebreaksbr }}</p>
+    <dl>
+      <dt>Kategorie</dt><dd>{{ artikel.kategorie|default:"—" }}</dd>
+      <dt>Zustand</dt><dd>{{ artikel.get_zustand_display }}</dd>
+      <dt>Preis</dt><dd>{{ artikel.preis|floatformat:2 }} €</dd>
+      <dt>P&amp;P</dt>
+      <dd>{% if artikel.pp_option %}{{ artikel.pp_option.bezeichnung }} (+{{ artikel.pp_option.kosten|floatformat:2 }} €){% else %}—{% endif %}</dd>
+      <dt>Verfügbar</dt><dd>{{ artikel.rest_verfügbar }} von {{ artikel.anzahl_verfügbar }}</dd>
+      <dt>Status</dt><dd>{% if artikel.verkauft %}verkauft{% else %}aktiv{% endif %}</dd>
+    </dl>
+  </div>
+
+  <h2>Bilder</h2>
+  {% for b in artikel.bilder.all %}
+    {% if b.source == "upload" and b.pfad %}
+      <img src="{{ b.abs_pfad }}" alt="{{ b.alt_text }}" style="max-width:220px;display:inline-block;margin:.25rem;border-radius:.3rem">
+    {% elif b.symbol %}
+      <span class="card">[Symbol: {{ b.symbol.bezeichnung }}]</span>
+    {% endif %}
+  {% empty %}
+    <p class="muted">Keine Bilder.</p>
+  {% endfor %}
+
+  <h2>Plattformen</h2>
+  {% for p in artikel.plattformstatus_set.all %}
+    <div class="card">
+      {{ p.platform.name }}: <strong>{{ p.get_status_display }}</strong>
+      {% if p.letzte_fehlermeldung %}<div class="error">{{ p.letzte_fehlermeldung }}</div>{% endif %}
+    </div>
+  {% empty %}
+    <p class="muted">Noch keine Plattform-Status.</p>
+  {% endfor %}
+
+  <p style="margin-top:1.5rem">
+    <a class="btn" href="{% url 'core:artikel-bearbeiten' artikel.pk %}">Bearbeiten</a>
+  </p>
+{% endblock %}

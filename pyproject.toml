@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=70"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "flohmarkt"
+version = "0.1.0"
+description = "Zentrale Artikelverwaltung für den Multi-Plattform-Flohmarkt"
+requires-python = ">=3.12"   # lokal/CI läuft auch 3.12/3.13; Docker-Image nutzt Python 3.14
+dependencies = [
+    "Django>=6.1,<6.2",
+    "djangorestframework>=3.18,<4.0",
+    "drf-spectacular>=0.30,<0.31",
+    "psycopg[binary]>=3.3,<4.0",
+    "httpx>=0.28,<0.29",
+    "django-environ>=0.14,<0.15",
+    "whitenoise>=6.12,<7.0",
+    "gunicorn>=27.0,<28.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0,<10.0",
+    "pytest-django>=4.14,<5.0",
+    "ruff>=0.17,<0.18",
+]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "project.settings"
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = ["-ra", "--strict-markers"]
+markers = [
+    "slow: mark test as slow (deselect with '-m \"not slow\"')",
+    "integration: Integrationstests (laufen ideal gegen Postgres via make pytest-docker)",
+]
+
+[tool.ruff]
+line-length = 110
+target-version = "py314"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+ignore = [
+  "E501",
+  "RUF012",  # Django-Modell-/Form-Defaults: deepcopy-Prüfung systematisch false-positive
+]
+
+[tool.ruff.lint.per-file-ignores]
+"src/project/settings/*.py" = ["F405"]  # Settings-Leiter macht bewusst `from .base import *`
+"src/project/core/models.py" = ["RUF012"]  # Django Field()-Defaults: deepcopy-Prüfung irrelevant
+"tests/**" = ["B017"]
