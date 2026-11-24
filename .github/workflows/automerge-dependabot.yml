@@ -1,0 +1,41 @@
+# Automerge für Dependabot-PRs:
+#
+# Wie es funktioniert:
+#   1. Repo-Setting "Allow auto-merge" ist AN (gh repo edit --enable-auto-merge).
+#   2. Branch-Protection auf main hat Required Status Checks (lint, test-sqlite,
+#      test-postgres, sbom, docker) + "Require branch to be up to date" (strict).
+#   3. Diese Workflow-Datei HÄNGT "auto-merge" an jede Dependabot-PR, sobald sie
+#      geöffnet wird. Zu diesem Zeitpunkt sind die Checks noch nicht grün (nicht
+#      erfüllt) -> GitHub speichert die Auto-Merge-Anfrage.
+#   4. GitHub führt den Merge automatisch aus, sobald ALLE erforderlichen Checks
+#      grün SIND und der PR-Zweig mit main auf Höhe ist (strict).
+#
+# Nur Dependabot wird so gemerged; manuelle PRs bleiben unverändert (da muss
+# weiterhin manuell / "green = mergebar", aber nicht automatisch ge-mergt werden).
+name: automerge-dependabot
+
+on:
+  # Fällt, wenn Dependabot eine PR öffnet (opened) oder ihre eigene Branche
+  # aktualisiert (synchronize) – in beiden Fällen wollen wir Auto-Merge requesten.
+  pull_request:
+
+permissions:
+  pull-requests: write
+
+concurrency:
+  group: automerge-dependabot-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  automerge:
+    # Nur Dependabot-PRs; manuelle/sonstige PRs nicht anfassen.
+    # Doppelte Abfrage (actor + PR-Autor) als Schutz gegen Fork-Trigger.
+    if: github.actor == 'dependabot[bot]' && github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Request auto-merge
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          pull-request-number: ${{ github.event.pull_request.number }}
+          # squash -> sauberer 1-Commit pro Bump auf main.
+          merge-method: squash
